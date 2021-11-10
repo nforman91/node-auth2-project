@@ -61,14 +61,14 @@ const checkUsernameExists = (req, res, next) => {
       "message": "Invalid credentials"
     }
   */
-  const { username } = req.body
-  const userArr = await User.findBy({ username: username })
-  if (!userArr.length) {
-    next({ status: 401, message: 'Invalid credentials' })
-  } else {
-    req.user = userArr[0]
-    next()
-  }
+  // const { username } = req.body
+  // const userArr = User.findBy({ username: username })
+  // if (!userArr.length) {
+  //   next({ status: 401, message: 'Invalid credentials' })
+  // } else {
+  //   req.user = userArr[0]
+  //   next()
+  // }
 }
 
 

@@ -57,6 +57,22 @@ router.post("/login", checkUsernameExists, (req, res, next) => {
       "role_name": "admin" // the role of the authenticated user
     }
    */
+  let { username, password } = req.body;
+
+  Users.findBy({ username }) // it would be nice to have middleware do this
+    .then(([user]) => {
+      if (user && bcrypt.compareSync(password, user.password)) {
+        const token = tokenBuilder(user)
+
+        res.status(200).json({
+          message: `${user.username} is back!`,
+          token
+        });
+      } else {
+        next({ status: 401, message: 'Invalid Credentials' });
+      }
+    })
+    .catch(next);
 });
 
 module.exports = router;
