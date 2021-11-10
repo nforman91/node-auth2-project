@@ -20,18 +20,17 @@ const restricted = (req, res, next) => {
   */
   const token = req.headers.authorization
   if (!token) {
-    res.status(401).json("Token required")
+    next({ status: 401, message: "Token required" })
   } else {
-    jwt.verify(token, jwtSecret, (err, decoded) => {
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
-        res.status(401).json('Token invalid')
+        next({ status: 401, message: "Token invalid" })
       } else {
         req.decodedJwt = decoded
         next()
       }
     })
   }
-  next();
 }
 
 const only = role_name => (req, res, next) => {
@@ -53,7 +52,7 @@ const only = role_name => (req, res, next) => {
 }
 
 
-const checkUsernameExists = (req, res, next) => {
+const checkUsernameExists = async (req, res, next) => {
   /*
     If the username in req.body does NOT exist in the database
     status 401
@@ -61,14 +60,14 @@ const checkUsernameExists = (req, res, next) => {
       "message": "Invalid credentials"
     }
   */
-  // const { username } = req.body
-  // const userArr = User.findBy({ username: username })
-  // if (!userArr.length) {
-  //   next({ status: 401, message: 'Invalid credentials' })
-  // } else {
-  //   req.user = userArr[0]
-  //   next()
-  // }
+  const { username } = req.body
+  const userArr = await Users.findBy({ username: username })
+  if (!userArr[0]) {
+    next({ status: 401, message: 'Invalid credentials' })
+  } else {
+    req.user = userArr[0]
+    next()
+  }
 }
 
 
@@ -91,6 +90,18 @@ const validateRoleName = (req, res, next) => {
       "message": "Role name can not be longer than 32 chars"
     }
   */
+  const { role_name } = req.body
+  if (!role_name || !role_name.trim()) {
+    req.body.role_name = 'student'
+    next()
+  } else if (role_name.trim() === 'admin') {
+    next({ status: 422, message: 'Role name can not be admin' })
+  } else if (role_name.trim().length > 32) {
+    next({ status: 422, message: 'Role name can not be longer than 32 chars' })
+  } else {
+    req.body.role_name = role_name.trim()
+    next()
+  }
 }
 
 module.exports = {
