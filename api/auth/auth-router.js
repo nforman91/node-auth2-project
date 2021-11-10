@@ -1,6 +1,10 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const router = require("express").Router();
 const { checkUsernameExists, validateRoleName } = require('./auth-middleware');
 const { JWT_SECRET } = require("../secrets"); // use this secret!
+const tokenBuilder = require('../auth/token-builder')
+const Users = require('../users/users-model.js')
 
 router.post("/register", validateRoleName, (req, res, next) => {
   /**
@@ -14,6 +18,22 @@ router.post("/register", validateRoleName, (req, res, next) => {
       "role_name": "angel"
     }
    */
+
+  // **** CHECK OUT GABE'S ILLUSTRATION AT 48:30 ***** //
+  let user = req.body;
+
+  // bcrypting the password before saving
+  const rounds = process.env.BCRYPT_ROUNDS || 8; // 2 ^ 8
+  const hash = bcrypt.hashSync(user.password, rounds);
+
+  // never save the plain text password in the db
+  user.password = hash
+
+  Users.add(user)
+    .then(saved => {
+      res.status(201).json(saved);
+    })
+    .catch(next);
 });
 
 
